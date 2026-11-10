@@ -288,15 +288,8 @@
       return tl;
     },
     s8(s) {
-      const tl = generic(s), q = [...s.querySelectorAll('.q')], main = q.filter(x => !x.classList.contains('alt')), alt = q.filter(x => x.classList.contains('alt'));
+      const tl = generic(s);
       tl.from(s.querySelector('.photo8'), { x: -60, opacity: 0, duration: 1, ease: 'power3.out' }, 0);
-      // live: quotes rotate gently so more voices fit without crowding
-      for (let n = 0; n < SWAPS; n++) {
-        const out = main[(n * 2 + 1) % main.length], inn = alt[n % alt.length], t = 4 + n * 3.5;
-        tl.to(out, { opacity: 0, duration: .4 }, t)
-          .call(() => { [out.innerHTML, inn.innerHTML] = [inn.innerHTML, out.innerHTML]; }, null, t + .4)
-          .to(out, { opacity: 1, duration: .5 }, t + .42);
-      }
       return tl;
     },
     s9(s, i) { const tl = generic(s); (built[i].hub || []).forEach((p, k) => tl.add(drawIn(p, .9, 0), 1.2 + k * .15)); return tl; },
