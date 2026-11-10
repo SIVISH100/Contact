@@ -16,23 +16,24 @@ from pptx import Presentation
 from pptx.util import Emu
 
 P = 'http://schemas.openxmlformats.org/presentationml/2006/main'
+LEAD_IN = 0.5  # seconds of still first frame before the animation starts
 
 
 def encode(frames: Path) -> tuple[Path, Path]:
     mp4 = frames.with_suffix('.mp4')
     subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-framerate', '30', '-i', str(frames / 'f%05d.jpg'),
-                    '-c:v', 'libx264', '-preset', 'slow', '-crf', '21', '-pix_fmt', 'yuv420p',
-                    '-movflags', '+faststart', str(mp4)], check=True)
-    poster = sorted(frames.glob('f*.jpg'))[-1]
+                    '-vf', f'tpad=start_duration={LEAD_IN}:start_mode=clone',
+                    '-c:v', 'libx264', '-profile:v', 'main', '-level', '4.0', '-preset', 'slow', '-crf', '21',
+                    '-pix_fmt', 'yuv420p', '-movflags', '+faststart', str(mp4)], check=True)
+    poster = sorted(frames.glob('f*.jpg'))[0]   # PowerPoint shows the poster until playback starts
     return mp4, poster
 
 
 def autoplay(slide, spid: int, dur_ms: int) -> None:
-    """Replace python-pptx's click-to-play timing with play-on-entry + a fade transition."""
+    """Replace python-pptx's click-to-play timing with play-on-entry."""
     sld = slide._element
     for old in sld.findall(f'{{{P}}}timing') + sld.findall(f'{{{P}}}transition'):
         sld.remove(old)
-    transition = etree.fromstring(f'<p:transition xmlns:p="{P}" spd="med"><p:fade/></p:transition>')
     timing = etree.fromstring(f'''
 <p:timing xmlns:p="{P}"><p:tnLst><p:par><p:cTn id="1" dur="indefinite" restart="never" nodeType="tmRoot"><p:childTnLst>
   <p:par><p:cTn id="2" fill="hold"><p:stCondLst><p:cond delay="indefinite"/><p:cond evt="onBegin" delay="0"><p:tn val="2"/></p:cond></p:stCondLst><p:childTnLst>
@@ -44,12 +45,12 @@ def autoplay(slide, spid: int, dur_ms: int) -> None:
   </p:childTnLst></p:cTn></p:par>
   <p:video><p:cMediaNode vol="80000"><p:cTn id="6" fill="hold" display="0"><p:stCondLst><p:cond delay="indefinite"/></p:stCondLst></p:cTn><p:tgtEl><p:spTgt spid="{spid}"/></p:tgtEl></p:cMediaNode></p:video>
 </p:childTnLst></p:cTn></p:par></p:tnLst></p:timing>''')
-    # schema order: cSld, clrMapOvr, transition, timing, extLst
+    # schema order: cSld, clrMapOvr, timing, extLst (no transition: playback must start immediately)
     ext = sld.find(f'{{{P}}}extLst')
     if ext is not None:
-        ext.addprevious(transition); ext.addprevious(timing)
+        ext.addprevious(timing)
     else:
-        sld.append(transition); sld.append(timing)
+        sld.append(timing)
 
 
 def main(capdir: str, out: str) -> None:
@@ -59,7 +60,7 @@ def main(capdir: str, out: str) -> None:
     blank = prs.slide_layouts[6]
     for frames in sorted(p for p in cap.iterdir() if p.is_dir() and p.name.startswith('s')):
         mp4, poster = encode(frames)
-        dur_ms = int(len(list(frames.glob('f*.jpg'))) / 30 * 1000)
+        dur_ms = int((len(list(frames.glob('f*.jpg'))) / 30 + LEAD_IN) * 1000)
         slide = prs.slides.add_slide(blank)
         movie = slide.shapes.add_movie(str(mp4), 0, 0, prs.slide_width, prs.slide_height,
                                        poster_frame_image=str(poster), mime_type='video/mp4')
