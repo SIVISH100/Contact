@@ -32,6 +32,11 @@ def encode(frames: Path) -> tuple[Path, Path]:
 def autoplay(slide, spid: int, dur_ms: int) -> None:
     """Replace python-pptx's click-to-play timing with play-on-entry."""
     sld = slide._element
+    # a click on a full-bleed video must advance the slide, not pause the video
+    A = 'http://schemas.openxmlformats.org/drawingml/2006/main'
+    for h in sld.iter(f'{{{A}}}hlinkClick'):
+        if h.get('action') == 'ppaction://media':
+            h.getparent().remove(h)
     for old in sld.findall(f'{{{P}}}timing') + sld.findall(f'{{{P}}}transition'):
         sld.remove(old)
     timing = etree.fromstring(f'''
@@ -68,7 +73,29 @@ def main(capdir: str, out: str) -> None:
         autoplay(slide, movie.shape_id, dur_ms)
         print(frames.name, mp4.stat().st_size // 1024, 'KB')
     prs.save(out)
+    hide_media_controls(out)
     print('saved', out, Path(out).stat().st_size // 1024, 'KB')
+
+
+def hide_media_controls(path: str) -> None:
+    """Slide show: no media control bar on mouse-over (presProps showPr@showMediaCtrls=0)."""
+    import shutil
+    import tempfile
+    import zipfile
+    tmp = tempfile.mktemp(suffix='.pptx')
+    with zipfile.ZipFile(path) as zin, zipfile.ZipFile(tmp, 'w', zipfile.ZIP_DEFLATED) as zout:
+        for item in zin.infolist():
+            data = zin.read(item.filename)
+            if item.filename == 'ppt/presProps.xml':
+                root = etree.fromstring(data)
+                show = root.find(f'{{{P}}}showPr')
+                if show is None:
+                    show = etree.Element(f'{{{P}}}showPr')
+                    root.insert(0, show)
+                show.set('showMediaCtrls', '0')
+                data = etree.tostring(root, xml_declaration=True, encoding='UTF-8', standalone=True)
+            zout.writestr(item, data, compress_type=zipfile.ZIP_STORED if item.filename.endswith(('.mp4', '.jpg')) else zipfile.ZIP_DEFLATED)
+    shutil.move(tmp, path)
 
 
 if __name__ == '__main__':

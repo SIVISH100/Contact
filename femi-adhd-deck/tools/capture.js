@@ -14,7 +14,9 @@ const fs = require('fs');
   await p.waitForFunction(() => window.__tl);
   const n = await p.evaluate(() => document.querySelectorAll('.slide').length);
   const durations = {};
+  const only = process.argv[4] ? process.argv[4].split(',').map(Number) : null;   // optional: re-capture just these slides
   for (let s = 1; s <= n; s++) {
+    if (only && !only.includes(s)) continue;
     await p.goto(base + '&s=' + s + '#' + s);
     await p.waitForFunction(() => window.__tl && document.fonts.status === 'loaded');
     await p.waitForTimeout(300);
@@ -28,6 +30,6 @@ const fs = require('fs');
     durations[s] = total / fps;
     console.log('slide', s, 'frames', total);
   }
-  fs.writeFileSync(`${out}/durations.json`, JSON.stringify(durations, null, 1));
+  if (!only) fs.writeFileSync(`${out}/durations.json`, JSON.stringify(durations, null, 1));
   await b.close();
 })();
