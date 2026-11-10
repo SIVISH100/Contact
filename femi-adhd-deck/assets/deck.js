@@ -212,6 +212,22 @@
     return el;
   }
 
+  /* ---------- SLIDE 6: device lineup on one rail ---------- */
+  function buildRail(slide) {
+    const svg = slide.querySelector('svg.rail'); if (!svg) return null;
+    const pts = [];
+    slide.querySelectorAll('.lb').forEach(lb => {
+      const d = pos(slide.querySelector('.dv.' + lb.dataset.for)), cx = d.x + d.w / 2;
+      lb.style.left = 'auto'; lb.style.right = (W - cx) + 'px';
+      const p = pos(lb.querySelector('b')); pts.push([p.x + p.w / 2, p.y + p.h / 2]);
+    });
+    gradDefs(svg, 'railGrad', '#4FD1E8', '#796FB2', '#DD528B');
+    const g = svg.querySelector('#railGrad'); g.setAttribute('gradientUnits', 'userSpaceOnUse'); g.setAttribute('x1', 1920); g.setAttribute('x2', 0);
+    const y = pts[0][1], line = mkPath(svg, 'url(#railGrad)', 4, .9);
+    line.setAttribute('d', `M1990,${y} L${pts[pts.length - 1][0]},${y}`);
+    return line;
+  }
+
   /* ---------- per-slide animations (live mode only) ---------- */
   const built = {};
   slides.forEach((s, i) => {
@@ -221,6 +237,7 @@
   // layout-dependent builders run once fonts are ready (live and print)
   const ready = document.fonts.ready.then(() => slides.forEach((s, i) => {
     const vis = s.style.visibility; s.style.visibility = 'visible';
+    if (s.classList.contains('s6')) built[i] = { rail: buildRail(s) };
     if (s.classList.contains('s7')) built[i] = { road: buildRoad(s) };
     if (s.classList.contains('s9')) built[i] = { hub: buildHub(s) };
     if (s.classList.contains('s10')) built[i] = { spine: buildSpine(s) };
@@ -241,16 +258,17 @@
   }
   const enter = {
     s2: generic, s3: generic, s5: generic,
-    s6(s) {
-      const tl = generic(s), rows = [...s.querySelectorAll('.fi-row')], scr = [...s.querySelectorAll('.sc')];
-      tl.from(s.querySelector('.laptop'), { y: 40, opacity: 0, duration: .9, ease: 'power3.out' }, .3)
-        .from(s.querySelector('.phone'), { x: 40, opacity: 0, duration: .8, ease: 'power3.out' }, .7)
-        .from(rows, { x: -30, opacity: 0, duration: .5, stagger: .12 }, .5);
-      // walk through the features; the laptop screen follows
-      rows.forEach((r, k) => tl.call(() => {
-        rows.forEach(x => x.classList.toggle('on', x === r));
-        scr.forEach((x, n) => x.classList.toggle('on', n === +r.dataset.scr));
-      }, null, 1.6 + k * 2.2));
+    s6(s, i) {
+      const tl = gsap.timeline(), rail = built[i].rail;
+      tl.from(s.querySelectorAll('.head > *'), { y: 20, opacity: 0, duration: .6, stagger: .08 });
+      if (rail) tl.add(drawIn(rail, 2.2, 0), .4);
+      ['web', 'lap', 'ph', 'doc'].forEach((k, n) => {
+        tl.from(s.querySelector('.dv.' + k), { y: 50, opacity: 0, duration: .8, ease: 'power3.out' }, .5 + n * .45)
+          .from(s.querySelector(`.lb[data-for="${k}"]`), { y: 16, opacity: 0, duration: .5 }, .7 + n * .45);
+      });
+      // screens change: questionnaire -> teacher status on the laptop, personal area -> questionnaire on the phone
+      const swap = el => { const sc = [...el.querySelectorAll('.sc')], k = sc.findIndex(x => x.classList.contains('on')); sc[k].classList.remove('on'); sc[(k + 1) % sc.length].classList.add('on'); };
+      for (let n = 0; n < 6; n++) { tl.call(() => swap(s.querySelector('.lap')), null, 4 + n * 3); tl.call(() => swap(s.querySelector('.ph')), null, 5.5 + n * 3); }
       return tl;
     },
     s7(s, i) {
