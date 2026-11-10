@@ -113,7 +113,7 @@
   }
 
   /* ---------- SLIDE 4: tangle -> one clear path ---------- */
-  const FLOW_Y = 610, KNOT_X = 1560, END_X = 190;
+  const FLOW_Y = 420, KNOT_X = 1680, END_X = 200;
   function buildFlow(slide) {
     const svg = slide.querySelector('svg.flow'); if (!svg) return null;
     const r = rng(11), LINES = 7, lines = [];
@@ -128,23 +128,23 @@
       } else {
         // merged: detours inside the knot zone, then one shared line
         const o = (i - 3) * 13;
-        const tx = [1990, 1860 - r() * 60 + o, 1640 + r() * 80 + o, KNOT_X + 10 + o, END_X];
-        const ty = [420 + i * 58, 400 + r() * 440, 430 + r() * 400, FLOW_Y];
+        const tx = [1990, 1880 - r() * 50 + o, 1730 + r() * 60 + o, KNOT_X + 10 + o, END_X];
+        const ty = [330 + i * 70, 320 + r() * 560, 340 + r() * 520, FLOW_Y];
         // chaos: the same route type spread across the slide (echo of slide 1)
         const cx = [1990, 1400 + r() * 380, 300 + r() * 700, 900 + r() * 700, 160 + r() * 400];
-        const cy = [420 + i * 58, 300 + r() * 640, 300 + r() * 640, 320 + r() * 620];
+        const cy = [330 + i * 70, 300 + r() * 640, 300 + r() * 640, 320 + r() * 620];
         lines.push({ el, tx, ty, cx, cy, kind: 'a' });
       }
     }
     const defs = document.createElementNS(NS, 'defs');
     defs.innerHTML = `<linearGradient id="flowGrad" x1="1" x2="0" y1="0" y2="0"><stop offset="0" stop-color="#1F9DD0"/><stop offset=".55" stop-color="#796FB2"/><stop offset="1" stop-color="#DD528B"/></linearGradient>`;
     svg.appendChild(defs);
-    const glow = mkPath(svg, 'url(#flowGrad)', 24, .14);
-    const main = mkPath(svg, 'url(#flowGrad)', 8, 1);
+    const glow = mkPath(svg, '#1F9DD0', 24, .12);
+    const main = mkPath(svg, '#1F9DD0', 6, 1);
     const d = `M${KNOT_X - 40},${FLOW_Y} L${END_X},${FLOW_Y}`;
     glow.setAttribute('d', d); main.setAttribute('d', d);
     const tip = document.createElementNS(NS, 'circle');
-    tip.setAttribute('cx', END_X); tip.setAttribute('cy', FLOW_Y); tip.setAttribute('r', 12); tip.setAttribute('fill', '#DD528B');
+    tip.setAttribute('cx', END_X); tip.setAttribute('cy', FLOW_Y); tip.setAttribute('r', 10); tip.setAttribute('fill', '#1F9DD0');
     svg.appendChild(tip);
     const state = { t: 1 };
     function render() {
