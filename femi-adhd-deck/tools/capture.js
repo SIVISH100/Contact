@@ -9,7 +9,7 @@ const fs = require('fs');
   const out = process.argv[2], fps = +(process.argv[3] || 30), HOLD = 0.8;
   const b = await chromium.launch();
   const p = await b.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });
-  const base = 'file://' + path.resolve('index.html') + '?cap=1';
+  const base = 'file://' + path.resolve(process.env.PAGE || 'index.html') + '?cap=1';
   await p.goto(base + '&s=0#1');
   await p.waitForFunction(() => window.__tl);
   const n = await p.evaluate(() => document.querySelectorAll('.slide').length);

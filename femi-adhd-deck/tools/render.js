@@ -6,7 +6,7 @@ const path = require('path');
   const out = process.argv[2] || 'out', v = process.argv[3] || 'a';
   const b = await chromium.launch();
   const p = await b.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });
-  await p.goto('file://' + path.resolve('index.html') + '?print=1&v=' + v);
+  await p.goto('file://' + path.resolve(process.env.PAGE || 'index.html') + '?print=1&v=' + v);
   await p.evaluate(() => document.fonts.ready);
   await p.waitForTimeout(900);
   const slides = await p.$$('.slide');
