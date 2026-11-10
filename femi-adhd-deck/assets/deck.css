@@ -234,10 +234,10 @@ body:hover .hud{opacity:.85}
   box-shadow:0 40px 80px -20px rgba(0,0,0,.8),0 0 0 2px rgba(255,255,255,.14)}
 .s6 .ph .sc{position:absolute;inset:9px;width:calc(100% - 18px);height:calc(100% - 18px);border-radius:27px;object-fit:cover;object-position:top}
 .s6 .notch{position:absolute;top:14px;left:50%;width:64px;height:16px;margin-left:-32px;border-radius:10px;background:#0B1022;z-index:2}
-.s6 .doc{left:110px;width:240px;z-index:3;border-radius:8px;overflow:hidden;transform:rotate(-3deg);transform-origin:bottom center;box-shadow:0 30px 60px -18px rgba(0,0,0,.75)}
+.s6 .doc{left:110px;width:240px;z-index:3;border-radius:8px;overflow:hidden;box-shadow:0 30px 60px -18px rgba(0,0,0,.75)}
 .s6 .doc img{display:block;width:100%}
 .s6 .sc{opacity:0;transition:opacity .7s}.s6 .sc.on{opacity:1}
-.s6 .lb{position:absolute;top:880px;display:flex;align-items:flex-start;gap:14px;z-index:6;transform:translateX(50%)}
+.s6 .lb{position:absolute;top:902px;display:flex;align-items:flex-start;gap:14px;z-index:6;transform:translateX(50%)}
 .s6 .lb b{flex:none;width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#1F9DD0,#3B6CF0);display:grid;place-items:center;font-size:19px;box-shadow:0 0 0 6px rgba(31,157,208,.18)}
 .s6 .lb h3{font-size:25px;font-weight:700;line-height:1.2;white-space:nowrap}
 .s6 .lb p{font-size:18px;color:#B9C5E3;margin-top:4px;white-space:nowrap}
@@ -252,11 +252,11 @@ body:hover .hud{opacity:.85}
 .s7 svg.road{position:absolute;inset:0;z-index:2}
 .s7 .rs{position:absolute;right:120px;width:900px;display:flex;align-items:center;gap:28px;z-index:5}
 .s7 .rn{flex:none;display:grid;place-items:center;width:76px;height:76px;border-radius:50%;background:#fff;box-shadow:var(--shadow);position:relative;color:var(--blue)}
-.s7 .rn::before{content:"";position:absolute;inset:-4px;border-radius:50%;background:var(--grad-bp);z-index:-1}
+.s7 .rn::before{content:"";position:absolute;inset:-4px;border-radius:50%;background:#BFE3F5;z-index:-1}
 .s7 .rn .ic{width:34px;height:34px}
 .s7 .rs h3{font-size:29px;font-weight:700;line-height:1.2}
 .s7 .rs p{font-size:21px;line-height:1.4;color:var(--g70);margin-top:2px}
-.s7 .rs.top .rn{background:linear-gradient(135deg,#FFE29A,#FFB3CF);color:#B5476F}
+.s7 .rs.last .rn{background:linear-gradient(135deg,#FFE29A,#FFB3CF);color:#B5476F}
 .s7 .start{position:absolute;right:96px;top:968px;font-size:19px;font-weight:600;color:var(--blue);z-index:6;background:var(--blue-l);padding:6px 16px;border-radius:999px}
 .s7 .note{position:absolute;left:800px;right:420px;bottom:48px;text-align:right;font-size:17px;color:var(--g50);z-index:6}
 

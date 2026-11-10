@@ -176,11 +176,11 @@
     const svg = slide.querySelector('svg.road'); if (!svg) return null;
     const st = [...slide.querySelectorAll('.rs')], X = 1762;
     st.forEach(e => { e.style.top = (+e.dataset.y - 38) + 'px'; });
-    const ys = st.map(e => +e.dataset.y), y0 = 1010, y1 = ys[ys.length - 1];
+    const ys = st.map(e => +e.dataset.y).sort((p, q) => p - q), yTop = ys[0], yBot = ys[ys.length - 1];
     const d = document.createElementNS(NS, 'defs');
-    d.innerHTML = '<linearGradient id="roadGrad" x1="0" x2="0" y1="1" y2="0"><stop offset="0" stop-color="#1F9DD0"/><stop offset=".6" stop-color="#796FB2"/><stop offset="1" stop-color="#DD528B"/></linearGradient>';
+    d.innerHTML = '<linearGradient id="roadGrad" gradientUnits="userSpaceOnUse" x1="0" x2="0" y1="' + yTop + '" y2="' + yBot + '"><stop offset="0" stop-color="#1F9DD0"/><stop offset=".6" stop-color="#796FB2"/><stop offset="1" stop-color="#DD528B"/></linearGradient>';
     svg.appendChild(d);
-    const path = `M${X + 160},${y0 + 60} L${X + 40},${y0 + 60} Q${X},${y0 + 60} ${X},${y0 + 20} L${X},${y1}`;
+    const path = `M${X},${yTop} L${X},${yBot}`;
     const glow = mkPath(svg, 'url(#roadGrad)', 24, .12), main = mkPath(svg, 'url(#roadGrad)', 7, 1);
     glow.setAttribute('d', path); main.setAttribute('d', path);
     return { glow, main };
@@ -223,8 +223,10 @@
     });
     gradDefs(svg, 'railGrad', '#4FD1E8', '#796FB2', '#DD528B');
     const g = svg.querySelector('#railGrad'); g.setAttribute('gradientUnits', 'userSpaceOnUse'); g.setAttribute('x1', 1920); g.setAttribute('x2', 0);
-    const y = pts[0][1], line = mkPath(svg, 'url(#railGrad)', 4, .9);
-    line.setAttribute('d', `M1990,${y} L${pts[pts.length - 1][0]},${y}`);
+    const y = 872, line = mkPath(svg, 'url(#railGrad)', 3, .85);
+    line.setAttribute('d', `M1990,${y} L${pts[pts.length - 1][0] - 40},${y}`);
+    pts.forEach(([x]) => { const c = document.createElementNS(NS, 'circle'); c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', 7);
+      c.setAttribute('fill', '#0E1736'); c.setAttribute('stroke', '#4FD1E8'); c.setAttribute('stroke-width', 3); svg.appendChild(c); });
     return line;
   }
 
