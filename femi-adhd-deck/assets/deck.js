@@ -36,33 +36,78 @@
     svg.appendChild(p); return p;
   }
 
-  /* ---------- SLIDE 1: tangle between the six pain points ---------- */
+  const VARIANT = new URLSearchParams(location.search).get('v') || 'a';
+
+  /* ---- orthogonal "route" model: xs/ys alternate H,V,H,V… so any lerp stays orthogonal ---- */
+  function orthPts(xs, ys) {
+    const p = [[xs[0], ys[0]]];
+    for (let i = 1; i < xs.length; i++) { p.push([xs[i], ys[i - 1]]); if (i < ys.length) p.push([xs[i], ys[i]]); }
+    return p;
+  }
+  function rounded(pts, R = 38) {
+    let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+    for (let i = 1; i < pts.length - 1; i++) {
+      const [ax, ay] = pts[i - 1], [bx, by] = pts[i], [cx, cy] = pts[i + 1];
+      const l1 = Math.hypot(bx - ax, by - ay), l2 = Math.hypot(cx - bx, cy - by);
+      const r = Math.min(R, l1 / 2, l2 / 2);
+      if (r < .5) { d += `L${bx.toFixed(1)},${by.toFixed(1)}`; continue; }
+      const p1 = [bx - (bx - ax) / l1 * r, by - (by - ay) / l1 * r], p2 = [bx + (cx - bx) / l2 * r, by + (cy - by) / l2 * r];
+      d += `L${p1[0].toFixed(1)},${p1[1].toFixed(1)}Q${bx.toFixed(1)},${by.toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+    }
+    const z = pts[pts.length - 1]; return d + `L${z[0].toFixed(1)},${z[1].toFixed(1)}`;
+  }
+  /* ---- loop model: a line that makes one full turn on its way ---- */
+  function loopPts(a, b, at = .5, R = 70, side = 1) {
+    const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, px = -uy * side, py = ux * side;
+    const m = [a[0] + dx * at, a[1] + dy * at], c = [m[0] + px * R, m[1] + py * R];
+    const th0 = Math.atan2(m[1] - c[1], m[0] - c[0]), pts = [a, [lerp(a[0], m[0], .55), lerp(a[1], m[1], .55)]];
+    for (let k = 0; k <= 6; k++) { const th = th0 + side * k / 6 * Math.PI * 2 * (ux * py - uy * px > 0 ? 1 : -1); pts.push([c[0] + Math.cos(th) * R, c[1] + Math.sin(th) * R]); }
+    pts.push([lerp(m[0], b[0], .45), lerp(m[1], b[1], .45)], b);
+    return pts;
+  }
+  const COLORS = ['#1F9DD0', '#DD528B', '#796FB2', '#32A596'];
+
+  /* ---------- SLIDE 1: the six pain points, tangled ---------- */
   function buildTangle(slide) {
     const svg = slide.querySelector('svg.tangle'); if (!svg) return [];
-    const r = rng(7);
     const nodes = [...slide.querySelectorAll('[data-node]')].map(el => el.dataset.node.split(',').map(Number));
-    const core = [960, 548];
-    const pairs = [];
-    nodes.forEach((n, i) => {
-      pairs.push([n, core]);
-      pairs.push([n, nodes[(i + 2) % nodes.length]]);
-      pairs.push([n, nodes[(i + 3) % nodes.length]]);
-    });
-    // a few loose ends that run off-canvas
-    pairs.push([nodes[0], [1990, 120]], [nodes[3], [-60, 1000]], [nodes[5], [-60, 180]], [nodes[2], [2000, 1010]]);
-    const paths = [];
-    pairs.forEach(([a, b], i) => {
-      const n = 2 + Math.floor(r() * 3), pts = [a];
-      for (let k = 1; k <= n; k++) {
-        const t = k / (n + 1);
-        pts.push([lerp(a[0], b[0], t) + (r() - .5) * 760, lerp(a[1], b[1], t) + (r() - .5) * 520]);
-      }
-      pts.push(b);
-      pts.forEach(p => { p[0] = Math.max(-80, Math.min(2000, p[0])); p[1] = Math.max(250, Math.min(960, p[1])); });
-      const el = mkPath(svg, PALETTE[i % PALETTE.length], i % 4 === 0 ? 3 : 2, i % 5 === 0 ? .32 : .5);
-      if (i % 6 === 3) el.setAttribute('stroke-dasharray', '2 10');
-      el.setAttribute('d', smooth(pts, 1.1));
+    const core = [960, 548], paths = [];
+    if (VARIANT === 'b') {
+      const pairs = nodes.map((n, i) => [n, core, i]).concat([[nodes[0], nodes[4], 6], [nodes[5], nodes[2], 7], [nodes[1], nodes[3], 8]]);
+      pairs.forEach(([a, b, i]) => {
+        const el = mkPath(svg, COLORS[i % 4], 3, .55);
+        el.setAttribute('d', smooth(loopPts(a, b, i < 6 ? .5 : .3 + (i % 3) * .2, i < 6 ? 62 : 80, i % 2 ? 1 : -1), 1));
+        paths.push(el);
+      });
+      return paths;
+    }
+    // A: route map – lanes between the rows, parallel offsets, crossings, a few dead ends
+    const Y = [252, 455, 702, 925], X = [175, 650, 1270, 1760];
+    const routes = [
+      { xs: [1500, 650, 470], ys: [330, 252, 820] },
+      { xs: [1590, 1760, 1270, 430], ys: [580, 925, 455, 330] },
+      { xs: [1450, 1270, 175, 390], ys: [820, 702, 455, 580] },
+      { xs: [470, 650, 1270, 1500], ys: [820, 925, 252, 330] },
+      { xs: [390, 175, 1760, 1590], ys: [580, 925, 702, 580] },
+      { xs: [430, 650, 1270, 1450], ys: [330, 702, 455, 820] },
+      { xs: [1500, 1760, 1270, 650], ys: [330, 455, 925, 702], dead: 1 },
+      { xs: [390, 650, 1270], ys: [580, 252, 702], dead: 1 },
+      { xs: [1590, 1270, 650], ys: [580, 252, 925], dead: 1 },
+    ];
+    routes.forEach((rt, i) => {
+      const o = ((i % 5) - 2) * 13;   // parallel offset so shared lanes read as bundles
+      const xs = rt.xs.map((x, k) => (k === 0 || k === rt.xs.length - 1 && !rt.dead) ? x : x + o);
+      const ys = rt.ys.map((y, k) => (k === 0 || k === rt.ys.length - 1 && !rt.dead) ? y : y + o);
+      const el = mkPath(svg, COLORS[i % 4], 4, rt.dead ? .45 : .75);
+      if (rt.dead) el.setAttribute('stroke-dasharray', '1 12');
+      el.setAttribute('d', rounded(orthPts(xs, ys), 34));
       paths.push(el);
+      if (rt.dead) {
+        const z = orthPts(xs, ys).pop(), c = document.createElementNS(NS, 'circle');
+        c.setAttribute('cx', z[0]); c.setAttribute('cy', z[1]); c.setAttribute('r', 7);
+        c.setAttribute('fill', '#fff'); c.setAttribute('stroke', COLORS[i % 4]); c.setAttribute('stroke-width', 3);
+        svg.appendChild(c);
+      }
     });
     return paths;
   }
@@ -71,29 +116,32 @@
   const FLOW_Y = 610, KNOT_X = 1560, END_X = 190;
   function buildFlow(slide) {
     const svg = slide.querySelector('svg.flow'); if (!svg) return null;
-    const r = rng(42), N = 14, LINES = 10;
-    const lines = [];
+    const r = rng(11), LINES = 7, lines = [];
     for (let i = 0; i < LINES; i++) {
-      const tgt = [], chaos = [];
-      // converged: a knot at the right that feeds one straight path
-      tgt.push([1990, 380 + r() * 560]);
-      for (let k = 1; k <= 5; k++) tgt.push([KNOT_X + 40 + r() * 300, 440 + r() * 400]);
-      tgt.push([KNOT_X + 20, FLOW_Y + (r() - .5) * 30]);
-      tgt.push([KNOT_X - 60, FLOW_Y]);
-      for (let k = 1; k <= N - 8; k++) tgt.push([lerp(KNOT_X - 60, END_X, k / (N - 8)), FLOW_Y]);
-      // chaos: same point count, scattered across the slide (echo of slide 1)
-      chaos.push(tgt[0].slice());
-      for (let k = 1; k < N; k++) chaos.push([160 + r() * 1640, 300 + r() * 680]);
-      const el = mkPath(svg, PALETTE[i % PALETTE.length], 2.4, .5);
-      lines.push({ el, tgt, chaos });
+      const el = mkPath(svg, COLORS[i % 4], VARIANT === 'b' ? 3 : 4, .7);
+      if (VARIANT === 'b') {
+        const a = [1990, 420 + i * 62], tgt = loopPts(a, [KNOT_X - 40, FLOW_Y], .5, 34 + (i % 3) * 10, i % 2 ? 1 : -1);
+        tgt.push([lerp(KNOT_X - 40, END_X, .5), FLOW_Y], [END_X, FLOW_Y]);
+        const chaos = loopPts(a, [200 + r() * 600, 340 + r() * 600], .5, 120 + r() * 80, i % 2 ? 1 : -1);
+        chaos.push([200 + r() * 1500, 340 + r() * 600], [200 + r() * 1500, 340 + r() * 600]);
+        lines.push({ el, tgt, chaos, kind: 'b' });
+      } else {
+        // merged: detours inside the knot zone, then one shared line
+        const o = (i - 3) * 13;
+        const tx = [1990, 1860 - r() * 60 + o, 1640 + r() * 80 + o, KNOT_X + 10 + o, END_X];
+        const ty = [420 + i * 58, 400 + r() * 440, 430 + r() * 400, FLOW_Y];
+        // chaos: the same route type spread across the slide (echo of slide 1)
+        const cx = [1990, 1400 + r() * 380, 300 + r() * 700, 900 + r() * 700, 160 + r() * 400];
+        const cy = [420 + i * 58, 300 + r() * 640, 300 + r() * 640, 320 + r() * 620];
+        lines.push({ el, tx, ty, cx, cy, kind: 'a' });
+      }
     }
-    // the main clear path (drawn right -> left)
     const defs = document.createElementNS(NS, 'defs');
     defs.innerHTML = `<linearGradient id="flowGrad" x1="1" x2="0" y1="0" y2="0"><stop offset="0" stop-color="#1F9DD0"/><stop offset=".55" stop-color="#796FB2"/><stop offset="1" stop-color="#DD528B"/></linearGradient>`;
     svg.appendChild(defs);
-    const glow = mkPath(svg, 'url(#flowGrad)', 22, .14);
-    const main = mkPath(svg, 'url(#flowGrad)', 7, 1);
-    const d = `M${KNOT_X - 60},${FLOW_Y} L${END_X},${FLOW_Y}`;
+    const glow = mkPath(svg, 'url(#flowGrad)', 24, .14);
+    const main = mkPath(svg, 'url(#flowGrad)', 8, 1);
+    const d = `M${KNOT_X - 40},${FLOW_Y} L${END_X},${FLOW_Y}`;
     glow.setAttribute('d', d); main.setAttribute('d', d);
     const tip = document.createElementNS(NS, 'circle');
     tip.setAttribute('cx', END_X); tip.setAttribute('cy', FLOW_Y); tip.setAttribute('r', 12); tip.setAttribute('fill', '#DD528B');
@@ -102,9 +150,12 @@
     function render() {
       const e = state.t;
       lines.forEach(L => {
-        const pts = L.tgt.map((p, k) => [lerp(L.chaos[k][0], p[0], e), lerp(L.chaos[k][1], p[1], e)]);
-        L.el.setAttribute('d', smooth(pts, 1));
-        L.el.setAttribute('opacity', lerp(.5, .38, e));
+        if (L.kind === 'a') {
+          const xs = L.tx.map((x, k) => lerp(L.cx[k], x, e)), ys = L.ty.map((y, k) => lerp(L.cy[k], y, e));
+          L.el.setAttribute('d', rounded(orthPts(xs, ys), 34));
+        } else {
+          L.el.setAttribute('d', smooth(L.tgt.map((p, k) => [lerp(L.chaos[k][0], p[0], e), lerp(L.chaos[k][1], p[1], e)]), 1));
+        }
       });
     }
     render();
