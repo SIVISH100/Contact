@@ -12,8 +12,11 @@
     const m = (el.getAttribute('style') || '').match(/icons\/([\w-]+)\.svg/);
     if (m && window.ICONS && ICONS[m[1]]) el.innerHTML = ICONS[m[1]];
   });
+  // the intro slide ("view in slide show") exists only in the PowerPoint export
+  if (!CAP) document.querySelectorAll('.slide.intro').forEach(e => e.remove());
   const deck = document.getElementById('deck');
   const slides = [...document.querySelectorAll('.slide')];
+  slides.forEach((s, i) => s.classList.toggle('active', i === 0));   // exactly one starting slide
   slides.forEach(s => { const p = s.querySelector('.pageno'); if (p && s.dataset.n) p.textContent = String(s.dataset.n).padStart(2, '0'); });
 
   /* ---------- helpers ---------- */
@@ -262,7 +265,7 @@
     return tl;
   }
   const enter = {
-    s2: generic, s3: generic, s5: generic, s11: generic,
+    s2: generic, s3: generic, s5: generic, s11: generic, s12: generic,
     s6(s, i) {
       const tl = gsap.timeline(), rail = built[i].rail;
       tl.from(s.querySelectorAll('.head > *'), { y: 20, opacity: 0, duration: .6, stagger: .08 });
