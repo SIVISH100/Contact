@@ -284,3 +284,12 @@ body:hover .hud{opacity:.85}
 .s8 .q.alt{display:none}
 .s8 .src{position:absolute;left:620px;right:120px;bottom:36px;font-size:15px;color:var(--g60);text-align:right}
 .s8 .todo{background:#FFF1B8;color:#7A5A00;padding:0 6px;border-radius:4px}
+
+/* ================= SLIDE 11 · THANK YOU ================= */
+.s11{background:linear-gradient(180deg,#FFFFFF 0%,#EEF6FE 100%)}
+.s11 .r11{left:50%;top:50%;width:1300px;height:1300px;margin:-650px 0 0 -650px;opacity:.9}
+.s11 .ty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:5}
+.s11 .ty img{height:110px;margin-bottom:56px}
+.s11 h1{font-size:150px;font-weight:800;line-height:1;letter-spacing:-.02em;background:var(--grad-blue);-webkit-background-clip:text;background-clip:text;color:transparent;padding-bottom:10px}
+.s11 .ty p{font-size:34px;color:var(--g70);margin-top:30px;line-height:1.45}
+.s11 .site{margin-top:48px;font-size:26px;font-weight:600;color:#fff;background:var(--navy);padding:14px 34px;border-radius:999px;direction:ltr}

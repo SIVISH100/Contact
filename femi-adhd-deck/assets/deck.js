@@ -259,7 +259,7 @@
     return tl;
   }
   const enter = {
-    s2: generic, s3: generic, s5: generic,
+    s2: generic, s3: generic, s5: generic, s11: generic,
     s6(s, i) {
       const tl = gsap.timeline(), rail = built[i].rail;
       tl.from(s.querySelectorAll('.head > *'), { y: 20, opacity: 0, duration: .6, stagger: .08 });
