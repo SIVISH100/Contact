@@ -171,18 +171,18 @@
     svg.appendChild(d);
   }
 
-  /* ---------- SLIDE 7: the road continues and climbs ---------- */
+  /* ---------- SLIDE 7: one clean path that rises through six stations ---------- */
   function buildRoad(slide) {
     const svg = slide.querySelector('svg.road'); if (!svg) return null;
-    const st = [...slide.querySelectorAll('.rs')];
-    st.forEach(e => { e.style.left = (+e.dataset.x - 125) + 'px'; e.style.top = (+e.dataset.y - (e.classList.contains('last') ? 52 : 42)) + 'px'; });
-    const P = st.map(e => [+e.dataset.x, +e.dataset.y]);
-    const xs = [1990], ys = [P[0][1]];
-    for (let i = 0; i < P.length - 1; i++) { xs.push((P[i][0] + P[i + 1][0]) / 2); ys.push(P[i + 1][1]); }
-    xs.push(P[P.length - 1][0]);
-    gradDefs(svg, 'roadGrad', '#1F9DD0', '#796FB2', '#DD528B');
-    const glow = mkPath(svg, 'url(#roadGrad)', 26, .13), main = mkPath(svg, 'url(#roadGrad)', 8, 1);
-    const d = rounded(orthPts(xs, ys), 26); glow.setAttribute('d', d); main.setAttribute('d', d);
+    const st = [...slide.querySelectorAll('.rs')], X = 1762;
+    st.forEach(e => { e.style.top = (+e.dataset.y - 38) + 'px'; });
+    const ys = st.map(e => +e.dataset.y), y0 = 1010, y1 = ys[ys.length - 1];
+    const d = document.createElementNS(NS, 'defs');
+    d.innerHTML = '<linearGradient id="roadGrad" x1="0" x2="0" y1="1" y2="0"><stop offset="0" stop-color="#1F9DD0"/><stop offset=".6" stop-color="#796FB2"/><stop offset="1" stop-color="#DD528B"/></linearGradient>';
+    svg.appendChild(d);
+    const path = `M${X + 160},${y0 + 60} L${X + 40},${y0 + 60} Q${X},${y0 + 60} ${X},${y0 + 20} L${X},${y1}`;
+    const glow = mkPath(svg, 'url(#roadGrad)', 24, .12), main = mkPath(svg, 'url(#roadGrad)', 7, 1);
+    glow.setAttribute('d', path); main.setAttribute('d', path);
     return { glow, main };
   }
 
@@ -212,18 +212,6 @@
     return el;
   }
 
-  /* ---------- SLIDE 6: dashed links between the screens = one connected system ---------- */
-  function buildLinks(slide) {
-    const svg = slide.querySelector('svg.links'); if (!svg) return [];
-    const g = s => pos(slide.querySelector(s));
-    const t = g('.w-teacher'), m = g('.w-main'), ph = g('.phone'), dc = g('.doc'), paths = [];
-    const add = (xs, ys, col) => { const el = mkPath(svg, col, 4, .6); el.setAttribute('stroke-dasharray', '2 12'); el.setAttribute('d', rounded(orthPts(xs, ys), 30)); paths.push(el); };
-    add([t.x + 120, m.x + m.w / 2], [t.y, m.y - 26], '#DD528B');
-    add([m.x + m.w - 40, ph.x], [m.y + m.h + 30, ph.y + ph.h - 120], '#1F9DD0');
-    add([dc.x + dc.w / 2, m.x + 140], [dc.y + dc.h + 34, m.y + m.h], '#796FB2');
-    return paths;
-  }
-
   /* ---------- per-slide animations (live mode only) ---------- */
   const built = {};
   slides.forEach((s, i) => {
@@ -233,7 +221,6 @@
   // layout-dependent builders run once fonts are ready (live and print)
   const ready = document.fonts.ready.then(() => slides.forEach((s, i) => {
     const vis = s.style.visibility; s.style.visibility = 'visible';
-    if (s.classList.contains('s6')) built[i] = { links: buildLinks(s) };
     if (s.classList.contains('s7')) built[i] = { road: buildRoad(s) };
     if (s.classList.contains('s9')) built[i] = { hub: buildHub(s) };
     if (s.classList.contains('s10')) built[i] = { spine: buildSpine(s) };
@@ -253,14 +240,35 @@
     return tl;
   }
   const enter = {
-    s2: generic, s3: generic, s5: generic, s8: generic,
-    s6(s, i) { const tl = generic(s); (built[i].links || []).forEach((p, k) => tl.from(p, { opacity: 0, duration: .6 }, 1.4 + k * .2)); return tl; },
+    s2: generic, s3: generic, s5: generic,
+    s6(s) {
+      const tl = generic(s), rows = [...s.querySelectorAll('.fi-row')], scr = [...s.querySelectorAll('.sc')];
+      tl.from(s.querySelector('.laptop'), { y: 40, opacity: 0, duration: .9, ease: 'power3.out' }, .3)
+        .from(s.querySelector('.phone'), { x: 40, opacity: 0, duration: .8, ease: 'power3.out' }, .7)
+        .from(rows, { x: -30, opacity: 0, duration: .5, stagger: .12 }, .5);
+      // walk through the features; the laptop screen follows
+      rows.forEach((r, k) => tl.call(() => {
+        rows.forEach(x => x.classList.toggle('on', x === r));
+        scr.forEach((x, n) => x.classList.toggle('on', n === +r.dataset.scr));
+      }, null, 1.6 + k * 2.2));
+      return tl;
+    },
     s7(s, i) {
       const r = built[i].road, tl = gsap.timeline();
-      tl.from(s.querySelectorAll('.head > *'), { y: 20, opacity: 0, duration: .6, stagger: .08 })
-        .add(drawIn(r.main, 2.6, 0), .3).add(drawIn(r.glow, 2.6, 0), .3)
-        .from(s.querySelectorAll('.rs'), { y: 24, opacity: 0, duration: .5, stagger: .38, ease: 'back.out(1.6)' }, .6)
+      tl.from(s.querySelector('.photo'), { x: -60, opacity: 0, duration: 1, ease: 'power3.out' })
+        .from(s.querySelectorAll('.head > *'), { y: 20, opacity: 0, duration: .6, stagger: .08 }, .2)
+        .add(drawIn(r.main, 2.2, 0), .5).add(drawIn(r.glow, 2.2, 0), .5)
+        .from(s.querySelectorAll('.rs'), { x: -24, opacity: 0, duration: .5, stagger: .3, ease: 'power3.out' }, .7)
         .from(s.querySelectorAll('.start,.note'), { opacity: 0, duration: .6 }, .4);
+      return tl;
+    },
+    s8(s) {
+      const tl = generic(s), q = [...s.querySelectorAll('.q')], main = q.filter(x => !x.classList.contains('alt')), alt = q.filter(x => x.classList.contains('alt'));
+      tl.from(s.querySelector('.photo8'), { x: -60, opacity: 0, duration: 1, ease: 'power3.out' }, 0);
+      // live: quotes rotate gently so more voices fit without crowding
+      let k = 0; const swap = () => { const out = main[(k * 2 + 1) % main.length], inn = alt[k % alt.length];
+        gsap.to(out, { opacity: 0, duration: .4, onComplete: () => { [out.innerHTML, inn.innerHTML] = [inn.innerHTML, out.innerHTML]; gsap.to(out, { opacity: 1, duration: .5 }); } }); k++; };
+      for (let n = 0; n < 6; n++) tl.call(swap, null, 4 + n * 3.5);
       return tl;
     },
     s9(s, i) { const tl = generic(s); (built[i].hub || []).forEach((p, k) => tl.add(drawIn(p, .9, 0), 1.2 + k * .15)); return tl; },
