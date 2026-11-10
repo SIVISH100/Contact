@@ -1,0 +1,121 @@
+/* ===== Femi ADHD – competition deck ===== */
+@font-face{font-family:Rubik;font-weight:300;src:url(fonts/rubik-hebrew-300-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+@font-face{font-family:Rubik;font-weight:400;src:url(fonts/rubik-hebrew-400-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+@font-face{font-family:Rubik;font-weight:500;src:url(fonts/rubik-hebrew-500-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+@font-face{font-family:Rubik;font-weight:600;src:url(fonts/rubik-hebrew-600-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+@font-face{font-family:Rubik;font-weight:700;src:url(fonts/rubik-hebrew-700-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+@font-face{font-family:Rubik;font-weight:800;src:url(fonts/rubik-hebrew-800-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+@font-face{font-family:Rubik;font-weight:300;src:url(fonts/rubik-latin-300-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+2190-21FF}
+@font-face{font-family:Rubik;font-weight:400;src:url(fonts/rubik-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+2190-21FF}
+@font-face{font-family:Rubik;font-weight:500;src:url(fonts/rubik-latin-500-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+2190-21FF}
+@font-face{font-family:Rubik;font-weight:600;src:url(fonts/rubik-latin-600-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+2190-21FF}
+@font-face{font-family:Rubik;font-weight:700;src:url(fonts/rubik-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+2190-21FF}
+@font-face{font-family:Rubik;font-weight:800;src:url(fonts/rubik-latin-800-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+2190-21FF}
+
+:root{
+  /* Figma: Design System — Website ADHD */
+  --blue:#1F9DD0; --pink:#DD528B; --green:#32A596; --purple:#796FB2;
+  --blue-l:#DFF2FF; --pink-l:#FFEAF0; --green-l:#E4F3EF; --purple-l:#DBD5FE;
+  --navy:#1D2D53; --white:#fff;
+  --g10:#F2F4F8; --g20:#DDE1E6; --g30:#C1C7CD; --g50:#878D96; --g60:#697077; --g70:#4D5358;
+  --grad-blue: linear-gradient(90deg,#1F9DD0 0%,#3B6CF0 100%);
+  --grad-bp: linear-gradient(120deg,#1F9DD0 0%,#796FB2 55%,#DD528B 100%);
+  --grad-bloom: linear-gradient(135deg,#A78BFA 0%,#7DD3FC 100%);
+  --shadow: 0 18px 48px -18px rgba(29,45,83,.22), 0 2px 6px rgba(29,45,83,.06);
+  --shadow-s: 0 10px 28px -14px rgba(29,45,83,.25);
+  --r: 28px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#0d1530;overflow:hidden}
+body{font-family:Rubik,system-ui,sans-serif;color:var(--navy);-webkit-font-smoothing:antialiased}
+
+/* ---------- stage ---------- */
+#deck{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform-origin:center center}
+.slide{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;direction:rtl;
+  background:linear-gradient(180deg,#FFFFFF 0%,#F4F9FE 60%,#E9F4FD 100%);
+  opacity:0;visibility:hidden;transition:opacity .5s ease, visibility .5s}
+.slide.active{opacity:1;visibility:visible}
+
+/* print / pdf: every slide a page, final states */
+body.print{overflow:visible;background:#fff}
+body.print #deck{position:static;transform:none!important;width:1920px;height:auto}
+body.print .slide{position:relative;opacity:1;visibility:visible;page-break-after:always;break-after:page}
+body.print .hud{display:none}
+@page{size:1920px 1080px;margin:0}
+
+/* ---------- ambience ---------- */
+.blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.55;pointer-events:none}
+.blob.purple{background:#B79CFF}.blob.cyan{background:#8FDcff}.blob.pink{background:#FFB3CF}.blob.blue{background:#7FB8FF}
+.rings{position:absolute;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(255,255,255,.0) 0 30%,rgba(255,255,255,.5) 30.2% 30.6%,rgba(255,255,255,0) 30.8% 46%,rgba(255,255,255,.45) 46.2% 46.6%,rgba(255,255,255,0) 46.8% 62%,rgba(255,255,255,.4) 62.2% 62.6%,rgba(255,255,255,0) 62.8%)}
+
+/* ---------- chrome ---------- */
+.logo{position:absolute;top:56px;left:96px;height:46px;z-index:20}
+.pageno{position:absolute;bottom:44px;left:96px;font-size:18px;font-weight:500;color:var(--g50);letter-spacing:.04em;z-index:20}
+.footer-bar{position:absolute;left:0;right:0;bottom:0;height:10px;background:var(--grad-bp);z-index:20}
+
+.head{position:absolute;top:84px;right:120px;left:420px;z-index:10}
+.kicker{display:inline-flex;align-items:center;gap:12px;font-size:22px;font-weight:600;color:var(--blue);
+  background:var(--blue-l);border-radius:999px;padding:8px 20px;margin-bottom:22px}
+.kicker b{font-weight:800}
+h1.t{font-size:64px;line-height:1.08;font-weight:700;letter-spacing:-.01em}
+h1.t em{font-style:normal;background:var(--grad-blue);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font-size:30px;font-weight:400;color:var(--g70);margin-top:16px}
+
+/* icon via mask so it takes color */
+.ic{display:inline-block;width:32px;height:32px;line-height:0}
+.ic svg{width:100%;height:100%;stroke-width:1.9}
+
+.card{background:rgba(255,255,255,.86);border:1px solid rgba(255,255,255,.9);border-radius:var(--r);box-shadow:var(--shadow);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.punch{position:absolute;left:120px;right:120px;bottom:70px;text-align:center;font-size:32px;font-weight:500;line-height:1.35;z-index:10}
+.punch mark{background:none;color:var(--pink);font-weight:700}
+
+/* ---------- HUD ---------- */
+.hud{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:10px;align-items:center;z-index:99;
+  font:500 14px Rubik;color:#c9d4ee;opacity:.0;transition:opacity .3s}
+body:hover .hud{opacity:.85}
+.hud button{all:unset;cursor:pointer;padding:6px 12px;border-radius:8px;background:rgba(255,255,255,.12)}
+
+/* ================= SLIDE 0 · COVER ================= */
+.s0{background:linear-gradient(180deg,#FFFFFF 0%,#EEF6FE 100%)}
+.s0 .hero{position:absolute;left:150px;bottom:0;width:820px;height:1000px}
+.s0 .hero .rings{left:-90px;top:110px;width:1000px;height:1000px}
+.s0 .hero img.girl{position:absolute;left:170px;bottom:70px;width:520px;filter:drop-shadow(0 30px 40px rgba(29,45,83,.18))}
+.s0 .chip{position:absolute;display:flex;flex-direction:column;align-items:center;gap:10px;width:250px;padding:22px 16px 18px;font-size:21px;font-weight:700}
+.s0 .chip .dot{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;color:#fff}
+.s0 .brand{position:absolute;right:140px;top:250px;width:860px}
+.s0 .brand img{height:96px;margin-bottom:46px}
+.s0 .brand h1{font-size:84px;line-height:1.05;font-weight:700;letter-spacing:-.015em}
+.s0 .brand h1 em{font-style:normal;background:var(--grad-blue);-webkit-background-clip:text;background-clip:text;color:transparent}
+.s0 .brand p{font-size:32px;color:var(--g70);margin-top:26px;line-height:1.4}
+.s0 .tag{display:inline-flex;gap:14px;align-items:center;margin-top:56px;background:var(--navy);color:#fff;border-radius:999px;padding:16px 30px;font-size:24px;font-weight:500}
+.s0 .tag span{opacity:.6}
+
+/* ================= SLIDE 1 · PROBLEM ================= */
+.s1{background:linear-gradient(180deg,#F7F8FB 0%,#EEF1F6 100%)}
+.s1 svg.tangle{position:absolute;inset:0;z-index:2}
+.s1 .core{position:absolute;left:50%;top:548px;width:500px;height:500px;margin:-250px 0 0 -250px;border-radius:50%;z-index:5;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px}
+.s1 .core .num{font-size:54px;white-space:nowrap;font-weight:800;letter-spacing:-.02em;line-height:1;direction:ltr;
+  background:var(--grad-blue);-webkit-background-clip:text;background-clip:text;color:transparent}
+.s1 .core .lbl{font-size:25px;font-weight:500;line-height:1.35;margin-top:18px;color:var(--navy)}
+.s1 .core::before{content:"";position:absolute;inset:-26px;border-radius:50%;border:2px dashed rgba(121,111,178,.35)}
+.s1 .bub{position:absolute;z-index:6;display:flex;align-items:center;gap:16px;padding:20px 26px 20px 30px;border-radius:999px;font-size:25px;font-weight:600;white-space:nowrap}
+.s1 .bub .ic{width:30px;height:30px}
+.s1 .bub .ico{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;flex:none}
+
+/* ================= SLIDE 4 · NEW STANDARD ================= */
+.s4 svg.flow{position:absolute;inset:0;z-index:2}
+.s4 .st{position:absolute;top:562px;width:270px;z-index:6;text-align:center}
+.s4 .node{width:96px;height:96px;margin:0 auto;border-radius:50%;background:#fff;box-shadow:var(--shadow);position:relative;display:grid;place-items:center}
+.s4 .node::before{content:"";position:absolute;inset:-6px;border-radius:50%;background:var(--grad-bp);z-index:-1}
+.s4 .node .ic{width:40px;height:40px;color:var(--blue)}
+.s4 .node .n{position:absolute;top:-6px;right:-6px;width:36px;height:36px;border-radius:50%;background:var(--navy);color:#fff;font-size:19px;font-weight:700;display:grid;place-items:center}
+.s4 .st h3{font-size:27px;font-weight:700;line-height:1.2;margin:34px 0 12px}
+.s4 .st p{font-size:20px;line-height:1.45;color:var(--g70)}
+.s4 .st .hl{display:inline-block;margin-top:16px;font-size:24px;font-weight:700;color:#fff;background:var(--grad-blue);padding:8px 18px;border-radius:999px}
+.s4 .st .hl.pk{background:linear-gradient(90deg,#DD528B,#796FB2)}
+.s4 .from,.s4 .to{position:absolute;top:400px;font-size:20px;font-weight:600;letter-spacing:.02em;z-index:6}
+.s4 .from{right:110px;color:var(--g50)}
+.s4 .to{left:120px;color:var(--blue)}
