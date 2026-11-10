@@ -162,12 +162,83 @@
     return { state, render, main, glow, tip, lines };
   }
 
+  /* layout position of an element inside its slide (unaffected by the stage scale) */
+  function pos(el) { const s = el.closest('.slide').getBoundingClientRect(), r = el.getBoundingClientRect(), k = s.width / W;
+    return { x: (r.left - s.left) / k, y: (r.top - s.top) / k, w: r.width / k, h: r.height / k }; }
+  function gradDefs(svg, id, a, b, c) {
+    const d = document.createElementNS(NS, 'defs');
+    d.innerHTML = `<linearGradient id="${id}" x1="1" x2="0" y1="0" y2="0"><stop offset="0" stop-color="${a}"/><stop offset=".55" stop-color="${b}"/><stop offset="1" stop-color="${c}"/></linearGradient>`;
+    svg.appendChild(d);
+  }
+
+  /* ---------- SLIDE 7: the road continues and climbs ---------- */
+  function buildRoad(slide) {
+    const svg = slide.querySelector('svg.road'); if (!svg) return null;
+    const st = [...slide.querySelectorAll('.rs')];
+    st.forEach(e => { e.style.left = (+e.dataset.x - 125) + 'px'; e.style.top = (+e.dataset.y - (e.classList.contains('last') ? 52 : 42)) + 'px'; });
+    const P = st.map(e => [+e.dataset.x, +e.dataset.y]);
+    const xs = [1990], ys = [P[0][1]];
+    for (let i = 0; i < P.length - 1; i++) { xs.push((P[i][0] + P[i + 1][0]) / 2); ys.push(P[i + 1][1]); }
+    xs.push(P[P.length - 1][0]);
+    gradDefs(svg, 'roadGrad', '#1F9DD0', '#796FB2', '#DD528B');
+    const glow = mkPath(svg, 'url(#roadGrad)', 26, .13), main = mkPath(svg, 'url(#roadGrad)', 8, 1);
+    const d = rounded(orthPts(xs, ys), 26); glow.setAttribute('d', d); main.setAttribute('d', d);
+    return { glow, main };
+  }
+
+  /* ---------- SLIDE 9: four value cards plugged into one hub ---------- */
+  function buildHub(slide) {
+    const svg = slide.querySelector('svg.hub'); if (!svg) return [];
+    const c = [960, 605], paths = [];
+    slide.querySelectorAll('.bc').forEach((card, i) => {
+      const p = pos(card), right = p.x > 960, top = p.y < 605;
+      const ex = right ? p.x : p.x + p.w, ey = p.y + p.h / 2, mx = right ? c[0] + 110 : c[0] - 110;
+      const el = mkPath(svg, COLORS[i % 4], 4, .7);
+      el.setAttribute('d', rounded(orthPts([c[0], mx, ex], [c[1], ey]), 30));
+      paths.push(el);
+    });
+    return paths;
+  }
+
+  /* ---------- SLIDE 10: a spine through the three impact areas ---------- */
+  function buildSpine(slide) {
+    const svg = slide.querySelector('svg.spine'); if (!svg) return null;
+    const ic = [...slide.querySelectorAll('.bi')].map(pos).map(p => [p.x + p.w / 2, p.y + p.h / 2]);
+    gradDefs(svg, 'spineGrad', '#1F9DD0', '#796FB2', '#DD528B');
+    svg.querySelector('#spineGrad').setAttribute('x1', 0); svg.querySelector('#spineGrad').setAttribute('y1', 0);
+    svg.querySelector('#spineGrad').setAttribute('x2', 0); svg.querySelector('#spineGrad').setAttribute('y2', 1);
+    const el = mkPath(svg, 'url(#spineGrad)', 6, .9);
+    el.setAttribute('d', `M${ic[0][0]},${ic[0][1] - 140} L${ic[2][0]},${ic[2][1]}`);
+    return el;
+  }
+
+  /* ---------- SLIDE 6: dashed links between the screens = one connected system ---------- */
+  function buildLinks(slide) {
+    const svg = slide.querySelector('svg.links'); if (!svg) return [];
+    const g = s => pos(slide.querySelector(s));
+    const t = g('.w-teacher'), m = g('.w-main'), ph = g('.phone'), dc = g('.doc'), paths = [];
+    const add = (xs, ys, col) => { const el = mkPath(svg, col, 4, .6); el.setAttribute('stroke-dasharray', '2 12'); el.setAttribute('d', rounded(orthPts(xs, ys), 30)); paths.push(el); };
+    add([t.x + 120, m.x + m.w / 2], [t.y, m.y - 26], '#DD528B');
+    add([m.x + m.w - 40, ph.x], [m.y + m.h + 30, ph.y + ph.h - 120], '#1F9DD0');
+    add([dc.x + dc.w / 2, m.x + 140], [dc.y + dc.h + 34, m.y + m.h], '#796FB2');
+    return paths;
+  }
+
   /* ---------- per-slide animations (live mode only) ---------- */
   const built = {};
   slides.forEach((s, i) => {
     if (s.classList.contains('s1')) built[i] = { paths: buildTangle(s) };
     if (s.classList.contains('s4')) built[i] = { flow: buildFlow(s) };
   });
+  // layout-dependent builders run once fonts are ready (live and print)
+  const ready = document.fonts.ready.then(() => slides.forEach((s, i) => {
+    const vis = s.style.visibility; s.style.visibility = 'visible';
+    if (s.classList.contains('s6')) built[i] = { links: buildLinks(s) };
+    if (s.classList.contains('s7')) built[i] = { road: buildRoad(s) };
+    if (s.classList.contains('s9')) built[i] = { hub: buildHub(s) };
+    if (s.classList.contains('s10')) built[i] = { spine: buildSpine(s) };
+    s.style.visibility = vis;
+  }));
 
   function drawIn(el, dur, delay, from = 'start') {
     const len = el.getTotalLength();
@@ -175,7 +246,25 @@
       onComplete: () => { if (!el.dataset.dash) el.style.strokeDasharray = ''; } });
   }
 
+  function generic(s) {
+    const tl = gsap.timeline();
+    tl.from(s.querySelectorAll('.head > *, .t10, .toplogo'), { y: 20, opacity: 0, duration: .6, stagger: .08 })
+      .from(s.querySelectorAll('.ani'), { y: 26, opacity: 0, duration: .55, stagger: .12, ease: 'power3.out' }, .3);
+    return tl;
+  }
   const enter = {
+    s2: generic, s3: generic, s5: generic, s8: generic,
+    s6(s, i) { const tl = generic(s); (built[i].links || []).forEach((p, k) => tl.from(p, { opacity: 0, duration: .6 }, 1.4 + k * .2)); return tl; },
+    s7(s, i) {
+      const r = built[i].road, tl = gsap.timeline();
+      tl.from(s.querySelectorAll('.head > *'), { y: 20, opacity: 0, duration: .6, stagger: .08 })
+        .add(drawIn(r.main, 2.6, 0), .3).add(drawIn(r.glow, 2.6, 0), .3)
+        .from(s.querySelectorAll('.rs'), { y: 24, opacity: 0, duration: .5, stagger: .38, ease: 'back.out(1.6)' }, .6)
+        .from(s.querySelectorAll('.start,.note'), { opacity: 0, duration: .6 }, .4);
+      return tl;
+    },
+    s9(s, i) { const tl = generic(s); (built[i].hub || []).forEach((p, k) => tl.add(drawIn(p, .9, 0), 1.2 + k * .15)); return tl; },
+    s10(s, i) { const tl = generic(s); if (built[i].spine) tl.add(drawIn(built[i].spine, 1.6, 0), .6); return tl; },
     s0(s) {
       const tl = gsap.timeline();
       tl.from(s.querySelector('.girl'), { y: 40, opacity: 0, duration: 1, ease: 'power3.out' })
@@ -232,6 +321,6 @@
     document.getElementById('next').onclick = () => go(cur + 1);
     document.getElementById('fs').onclick = () => document.documentElement.requestFullscreen?.();
     const start = parseInt(location.hash.slice(1)) - 1;
-    document.fonts.ready.then(() => go(isNaN(start) ? 0 : start));
+    ready.then(() => go(isNaN(start) ? 0 : start));
   }
 })();

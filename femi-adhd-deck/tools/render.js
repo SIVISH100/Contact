@@ -8,7 +8,7 @@ const path = require('path');
   const p = await b.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });
   await p.goto('file://' + path.resolve('index.html') + '?print=1&v=' + v);
   await p.evaluate(() => document.fonts.ready);
-  await p.waitForTimeout(400);
+  await p.waitForTimeout(900);
   const slides = await p.$$('.slide');
   for (let i = 0; i < slides.length; i++) {
     await slides[i].screenshot({ path: `${out}/${v}-slide-${String(i).padStart(2, '0')}.png` });
