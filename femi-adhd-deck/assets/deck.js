@@ -2,6 +2,9 @@
 (function () {
   const W = 1920, H = 1080;
   const PRINT = new URLSearchParams(location.search).has('print');
+  const CAP = new URLSearchParams(location.search).has('cap');   // frame-by-frame capture for the PowerPoint export
+  if (CAP) document.body.classList.add('cap');
+  const SWAPS = CAP ? 2 : 6;
   if (PRINT) document.body.classList.add('print');
 
   // inline icons (masks/fetch are blocked on file://)
@@ -269,8 +272,10 @@
           .from(s.querySelector(`.lb[data-for="${k}"]`), { y: 16, opacity: 0, duration: .5 }, .7 + n * .45);
       });
       // screens change: questionnaire -> teacher status on the laptop, personal area -> questionnaire on the phone
-      const swap = el => { const sc = [...el.querySelectorAll('.sc')], k = sc.findIndex(x => x.classList.contains('on')); sc[k].classList.remove('on'); sc[(k + 1) % sc.length].classList.add('on'); };
-      for (let n = 0; n < 6; n++) { tl.call(() => swap(s.querySelector('.lap')), null, 4 + n * 3); tl.call(() => swap(s.querySelector('.ph')), null, 5.5 + n * 3); }
+      const swapAt = (el, n, t) => { const sc = [...el.querySelectorAll('.sc')], a = sc[n % sc.length], b = sc[(n + 1) % sc.length];
+        tl.to(a, { opacity: 0, duration: .7, ease: 'none' }, t).to(b, { opacity: 1, duration: .7, ease: 'none' }, t); };
+      s.querySelectorAll('.sc').forEach(x => gsap.set(x, { opacity: x.classList.contains('on') ? 1 : 0 }));
+      for (let n = 0; n < SWAPS; n++) { swapAt(s.querySelector('.lap'), n, 4 + n * 3); swapAt(s.querySelector('.ph'), n, 5.5 + n * 3); }
       return tl;
     },
     s7(s, i) {
@@ -286,9 +291,12 @@
       const tl = generic(s), q = [...s.querySelectorAll('.q')], main = q.filter(x => !x.classList.contains('alt')), alt = q.filter(x => x.classList.contains('alt'));
       tl.from(s.querySelector('.photo8'), { x: -60, opacity: 0, duration: 1, ease: 'power3.out' }, 0);
       // live: quotes rotate gently so more voices fit without crowding
-      let k = 0; const swap = () => { const out = main[(k * 2 + 1) % main.length], inn = alt[k % alt.length];
-        gsap.to(out, { opacity: 0, duration: .4, onComplete: () => { [out.innerHTML, inn.innerHTML] = [inn.innerHTML, out.innerHTML]; gsap.to(out, { opacity: 1, duration: .5 }); } }); k++; };
-      for (let n = 0; n < 6; n++) tl.call(swap, null, 4 + n * 3.5);
+      for (let n = 0; n < SWAPS; n++) {
+        const out = main[(n * 2 + 1) % main.length], inn = alt[n % alt.length], t = 4 + n * 3.5;
+        tl.to(out, { opacity: 0, duration: .4 }, t)
+          .call(() => { [out.innerHTML, inn.innerHTML] = [inn.innerHTML, out.innerHTML]; }, null, t + .4)
+          .to(out, { opacity: 1, duration: .5 }, t + .42);
+      }
       return tl;
     },
     s9(s, i) { const tl = generic(s); (built[i].hub || []).forEach((p, k) => tl.add(drawIn(p, .9, 0), 1.2 + k * .15)); return tl; },
@@ -333,6 +341,7 @@
     slides[cur].classList.remove('active'); cur = n; slides[cur].classList.add('active');
     const key = [...slides[cur].classList].find(c => enter[c]);
     if (key && window.gsap) tl = enter[key](slides[cur], cur);
+    window.__tl = tl;
     history.replaceState(null, '', '#' + (cur + 1));
     document.getElementById('cnt').textContent = `${cur + 1} / ${slides.length}`;
   }

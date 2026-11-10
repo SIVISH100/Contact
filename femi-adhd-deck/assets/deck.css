@@ -236,7 +236,7 @@ body:hover .hud{opacity:.85}
 .s6 .notch{position:absolute;top:14px;left:50%;width:64px;height:16px;margin-left:-32px;border-radius:10px;background:#0B1022;z-index:2}
 .s6 .doc{left:110px;width:240px;z-index:3;border-radius:8px;overflow:hidden;box-shadow:0 30px 60px -18px rgba(0,0,0,.75)}
 .s6 .doc img{display:block;width:100%}
-.s6 .sc{opacity:0;transition:opacity .7s}.s6 .sc.on{opacity:1}
+.s6 .sc{opacity:0}.s6 .sc.on{opacity:1}
 .s6 .lb{position:absolute;top:902px;display:flex;align-items:flex-start;gap:14px;z-index:6;transform:translateX(50%)}
 .s6 .lb b{flex:none;width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#1F9DD0,#3B6CF0);display:grid;place-items:center;font-size:19px;box-shadow:0 0 0 6px rgba(31,157,208,.18)}
 .s6 .lb h3{font-size:25px;font-weight:700;line-height:1.2;white-space:nowrap}
@@ -293,3 +293,8 @@ body:hover .hud{opacity:.85}
 .s11 h1{font-size:150px;font-weight:800;line-height:1;letter-spacing:-.02em;background:var(--grad-blue);-webkit-background-clip:text;background-clip:text;color:transparent;padding-bottom:10px}
 .s11 .ty p{font-size:34px;color:var(--g70);margin-top:30px;line-height:1.45}
 .s11 .site{margin-top:48px;font-size:26px;font-weight:600;color:#fff;background:var(--navy);padding:14px 34px;border-radius:999px;direction:ltr}
+
+/* capture mode: no CSS transitions, no HUD (timeline is seeked frame by frame) */
+body.cap .slide{transition:none}
+body.cap .hud{display:none}
+body.cap{cursor:none}
