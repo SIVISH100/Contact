@@ -311,3 +311,9 @@ body.cap{cursor:none}
 .s12 .keys{display:flex;gap:18px;margin-top:48px}
 .s12 .keys span{font-size:26px;font-weight:500;background:#fff;border:1px solid var(--g20);border-radius:999px;padding:12px 28px;box-shadow:var(--shadow-s)}
 .s12 .keys b{font-weight:800;color:var(--blue);direction:ltr;display:inline-block}
+
+/* print: gradient-clipped text disappears in some PDF viewers/printers -> solid brand colours */
+body.print h1.t em,body.print .s0 .brand h1 em,body.print .s1 .core .num,body.print .s2 .big,
+body.print .s10 .t10 em,body.print .s11 h1{background:none!important;color:#2F7FE0!important;-webkit-text-fill-color:#2F7FE0!important}
+body.print .s2 .big.pk,body.print .s9 .bc.exp .n35{background:none!important;color:#C0558F!important;-webkit-text-fill-color:#C0558F!important}
+body.print .s9 .bc.exp .n35 small{color:var(--g60)!important;-webkit-text-fill-color:var(--g60)!important}
